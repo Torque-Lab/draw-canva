@@ -1,10 +1,18 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { middleware } from "./middleware";
-import {JWT_SECRET} from "@repo/backend-common/config"
+import { JWT_SECRET } from "@repo/backend-common/config";
+import { createUserSchema } from "@repo/common/types";
+
 const app = express();
 console.log(JWT_SECRET);
 app.post("/signup", (req, res) => {
+  const data = createUserSchema.safeParse(req.body);
+  if (!data.success) {
+    return res.json({
+      message: "Invalid input",
+    });
+  }
   //db call
   res.json({
     roomId: 123,

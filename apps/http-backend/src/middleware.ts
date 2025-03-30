@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import {JWT_SECRET} from "@repo/backend-common/config"
 import dotenv from "dotenv";
 dotenv.config(); 
 import jwt from "jsonwebtoken";
-const JWT_SECRET = process.env.JWT_SECRET ||"3760438fbevb37385634" ;
 
 console.log(JWT_SECRET);
 
