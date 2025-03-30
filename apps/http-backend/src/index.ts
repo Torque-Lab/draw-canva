@@ -6,6 +6,7 @@ import { createUserSchema } from "@repo/common/types";
 
 const app = express();
 console.log(JWT_SECRET);
+//@ts-ignore
 app.post("/signup", (req, res) => {
   const data = createUserSchema.safeParse(req.body);
   if (!data.success) {
