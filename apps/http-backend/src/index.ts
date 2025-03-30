@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { middleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { createUserSchema } from "@repo/common/types";
-
+import 
 const app = express();
 console.log(JWT_SECRET);
 //@ts-ignore
