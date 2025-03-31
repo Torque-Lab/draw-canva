@@ -118,5 +118,23 @@ app.get("/chats/:roomId", async (req, res) => {
     messages,
   });
 });
+
+app.get("/room/:slug", async (req, res) => {
+  const slug = req.params.slug;
+  try {
+    const room = await prismaClient.room.findFirst({
+      where: {
+        slug: slug,
+      },
+    });
+    res.json({
+      room,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "An error occurred while fetching the room",
+    });
+  }
+});
 app.listen(3005);
 console.log("server stated at post 3005");
