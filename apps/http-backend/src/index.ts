@@ -70,6 +70,7 @@ app.post("/signin", async (req, res) => {
 //@ts-ignore
 app.post("/room", middleware, async (req, res) => {
   const parsedData = roomSchema.safeParse(req.body);
+
   if (!parsedData.success) {
     res.json({
       messages: "Incorrect input",
@@ -103,20 +104,24 @@ app.post("/room", middleware, async (req, res) => {
 });
 
 app.get("/chats/:roomId", async (req, res) => {
-  const roomId = Number(req.params.roomId);
-  const messages = await prismaClient.chat.findMany({
-    where: {
-      roomId: roomId,
-    },
-    orderBy: {
-      id: "desc",
-    },
-    take: 50,
-  });
+  try {
+    const roomId = Number(req.params.roomId);
+    const messages = await prismaClient.chat.findMany({
+      where: {
+        roomId: roomId,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      take: 50,
+    });
 
-  res.json({
-    messages,
-  });
+    res.json({
+      messages,
+    });
+  } catch (e) {
+    console.log("error in chats", e);
+  }
 });
 
 app.get("/room/:slug", async (req, res) => {

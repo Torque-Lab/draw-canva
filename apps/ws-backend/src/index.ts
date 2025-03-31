@@ -52,9 +52,10 @@ wss.on("connection", function connection(ws, request) {
   const queryParams = new URLSearchParams(url.split("?")[1]);
   const token = queryParams.get("token") || "";
   const userId = checkUser(token);
+  console.log(userId);
   if (userId == null) {
-    ws.close;
-    return null;
+    ws.close();
+    return;
   }
   //sate management on the backend
   // All ws object  of user will be stored in-inmemory
@@ -109,3 +110,5 @@ wss.on("connection", function connection(ws, request) {
     }
   });
 });
+
+console.log("ws server running on port");
