@@ -38,7 +38,7 @@ app.post("/signup", async (req, res) => {
 });
 
 //@ts-ignore
-app.post("signin", async (req, res) => {
+app.post("/signin", async (req, res) => {
   const parsedData = SignInSchema.safeParse(req.body);
   if (!parsedData.success) {
     res.json({
@@ -60,7 +60,8 @@ app.post("signin", async (req, res) => {
     return;
   }
 
-  const token = jwt.sign({ useId: user.id }, JWT_SECRET);
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+  
 
   res.json({
     token,
@@ -77,17 +78,29 @@ app.post("/room", middleware, async (req, res) => {
     return;
   }
   // @ts-ignore
-  const useId = req.userId;
-  await prismaClient.room.create({
-    data: {
-      slug: parsedData.data.room,
-      adminId: useId,
-    },
-  });
+  const userId = req.userId;
+  if (!userId) {
+    res.status(400).json({
+      message: "User ID is required",
+    });
+    return;
+  }
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug: parsedData.data.room,
+        adminId: userId,
+      },
+    });
 
-  res.json({
-    roomId: 123,
-  });
+    res.json({
+      roomId: room.id,
+    });
+  } catch (e) {
+    res.status(403).json({
+      messages: "room already exists with this name",
+    });
+  }
 });
 app.listen(3005);
-console.log("server stated");
+console.log("server stated at post 3005");

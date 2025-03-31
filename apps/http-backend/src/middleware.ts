@@ -1,30 +1,53 @@
 import { NextFunction, Request, Response } from "express";
-import {JWT_SECRET} from "@repo/backend-common/config"
+
+// Extend the Request interface to include userId
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
+}
+import { JWT_SECRET } from "@repo/backend-common/config";
 import dotenv from "dotenv";
-dotenv.config(); 
+dotenv.config();
 import jwt from "jsonwebtoken";
 
 console.log(JWT_SECRET);
 
 export function middleware(req: Request, res: Response, next: NextFunction) {
-  const token = req.headers["authorrization"] ?? "";
+  const token = req.headers["authorization"] ?? "";
+  console.log(req.headers);
 
-    
   if (!JWT_SECRET) {
     throw new Error("JWT_SECRET is not defined");
   }
   if (!token) {
     return res.status(401).json({ message: "Authorization token is missing" });
   }
-  //@ts-ignore
-  const decoded = jwt.verify(token, JWT_SECRET);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string };
+    
+    if (!decoded.userId) {
+      console.error("Decoded token does not contain userId:", decoded);
+      return res.status(403).json({
+        message: "Unauthorised: userId is missing in token",
+      });
+    }
+    console.log(decoded);
 
-  if (decoded.userId) {
-    // @ts-ignore
-    req.userId = decoded.userId;
-  } else {
-    res.status(403).json({
-      message: "Unauthorised",
+    if (decoded && decoded.userId) {
+      req.userId = decoded.userId;
+      next();
+    } else {
+      return res.status(403).json({
+        message: "Unauthorised",
+      });
+    }
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return res.status(403).json({
+      message: "Invalid or expired token",
     });
   }
 }
