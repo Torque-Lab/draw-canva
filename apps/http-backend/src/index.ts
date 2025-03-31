@@ -61,7 +61,6 @@ app.post("/signin", async (req, res) => {
   }
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET);
-  
 
   res.json({
     token,
@@ -101,6 +100,23 @@ app.post("/room", middleware, async (req, res) => {
       messages: "room already exists with this name",
     });
   }
+});
+
+app.get("/chats/:roomId", async (req, res) => {
+  const roomId = Number(req.params.roomId);
+  const messages = await prismaClient.chat.findMany({
+    where: {
+      roomId: roomId,
+    },
+    orderBy: {
+      id: "desc",
+    },
+    take: 50,
+  });
+
+  res.json({
+    messages,
+  });
 });
 app.listen(3005);
 console.log("server stated at post 3005");
