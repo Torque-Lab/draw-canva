@@ -35,31 +35,43 @@ export function ChatRoomClient({
   }, [socket, loading, id]);
 
   return (
-    <div>
-      {chat.map((m) => (
-        <div>{m.message}</div>
-      ))}
-      <input
-        type="text"
-        value={currentMessage}
-        onChange={(e) => {
-          setCurrentMessage(e.target.value);
-        }}
-      ></input>
-      <button
-        onClick={() => {
-          socket?.send(
-            JSON.stringify({
-              type: "chat",
-              roomId: id,
-              messages: currentMessage,
-            })
-          );
-          setCurrentMessage("");
-        }}
-      >
-        send Message
-      </button>
+    <div className="flex flex-col h-full p-4 bg-gray-100">
+      <div className="flex-1 overflow-y-auto mb-4">
+        {chat.map((m, index) => (
+          <div
+            key={index}
+            className="p-2 mb-2 bg-white rounded shadow-md border border-gray-200"
+          >
+            {m.message}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center space-x-2">
+        <input
+          type="text"
+          value={currentMessage}
+          onChange={(e) => {
+            setCurrentMessage(e.target.value);
+          }}
+          className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Type your message..."
+        />
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => {
+            socket?.send(
+              JSON.stringify({
+                type: "chat",
+                roomId: id,
+                messages: currentMessage,
+              })
+            );
+            setCurrentMessage("");
+          }}
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }

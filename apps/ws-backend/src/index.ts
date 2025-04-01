@@ -55,7 +55,7 @@ wss.on("connection", function connection(ws, request) {
   console.log(userId);
   if (userId == null) {
     ws.close();
-    return;
+    return null;
   }
   //sate management on the backend
   // All ws object  of user will be stored in-inmemory
@@ -67,7 +67,12 @@ wss.on("connection", function connection(ws, request) {
     userId,
   });
   ws.on("message", async function message(data) {
-    const parsedData = JSON.parse(data as unknown as string);
+    let parsedData;
+    if (typeof data !== "string") {
+      parsedData = JSON.parse(data.toString());
+    } else {
+      parsedData = JSON.parse(data);
+    }
 
     if (parsedData.type === "join_room") {
       //check is room exits or not(further task )
@@ -85,17 +90,30 @@ wss.on("connection", function connection(ws, request) {
 
     if (parsedData.type === "chat") {
       const roomId = parsedData.roomId;
+      if (!roomId) {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "Room ID is required for chat messages.",
+          })
+        );
+        return;
+      }
       const message = parsedData.message;
 
       // this ugly way as take time to do db call and there will be delay to broadcast as controll stuck here, better is Queue
       // pipeline do db
-      await prismaClient.chat.create({
-        data: {
-          roomId,
-          message,
-          userId,
-        },
-      });
+      try {
+        await prismaClient.chat.create({
+          data: {
+            roomId,
+            message,
+            userId,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+      }
       users.forEach((user) => {
         if (user.rooms.includes(roomId)) {
           user.ws.send(
