@@ -13,8 +13,6 @@ import dotenv from "dotenv";
 dotenv.config();
 import jwt from "jsonwebtoken";
 
-console.log(JWT_SECRET);
-
 export function middleware(req: Request, res: Response, next: NextFunction) {
   const token = req.headers["authorization"] ?? "";
   console.log(req.headers);
@@ -26,8 +24,9 @@ export function middleware(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: "Authorization token is missing" });
   }
   try {
+    console.log(token);
     const decoded = jwt.verify(token, JWT_SECRET) as { userId?: string };
-    
+    console.log(decoded);
     if (!decoded.userId) {
       console.error("Decoded token does not contain userId:", decoded);
       return res.status(403).json({

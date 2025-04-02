@@ -72,6 +72,7 @@ app.post("/signin", async (req, res) => {
 //@ts-ignore
 app.post("/room", middleware, async (req, res) => {
   const parsedData = roomSchema.safeParse(req.body);
+  console.log(parsedData);
 
   if (!parsedData.success) {
     res.json({
