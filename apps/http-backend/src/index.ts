@@ -4,12 +4,14 @@ import { middleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { createUserSchema, roomSchema, SignInSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
-
+import cors from "cors";
 const app = express();
 app.use(express.json());
+app.use(cors());
 //@ts-ignore
 app.post("/signup", async (req, res) => {
   const parsedData = createUserSchema.safeParse(req.body);
+
   if (!parsedData.success) {
     return res.json({
       message: "Invalid input",
@@ -55,7 +57,7 @@ app.post("/signin", async (req, res) => {
   });
   if (!user) {
     res.status(403).json({
-      message: "Not authorised",
+      message: "Invalid Credentials",
     });
     return;
   }
