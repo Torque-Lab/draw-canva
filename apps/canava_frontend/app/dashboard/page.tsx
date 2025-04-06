@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [roomName2, setRoomName2] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+  let roomId = null;
   const handleCreateRoom = async () => {
     if (!roomName.trim()) {
       setError("Room name is required!");
@@ -42,6 +42,7 @@ export default function Dashboard() {
 
       console.log("Room created:", response.data);
       const newRoomId = response.data.roomId;
+      roomId = newRoomId;
       router.push(`/canvas/${newRoomId}`); // ✅ Redirect to the new room
     } catch (error) {
       console.error(
@@ -82,7 +83,7 @@ export default function Dashboard() {
           >
             {loading ? "Creating..." : "Create Room"}
           </button>
-
+          <p className="">your room id {roomId}</p>
           {/* Join Room Option */}
           <div className="text-sm text-center mt-4">
             <p>Already have a Room ID?</p>
