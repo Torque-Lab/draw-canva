@@ -18,10 +18,13 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
 
     try {
       const endpoint = isSignin ? "/signin" : "/signup"; // Choose endpoint
-      const payload = isSignin
-        ? { username: email, password: password }
-        : { username: email, password: password, name: name };
+      let payload = null;
 
+      if (isSignin) {
+        payload = { username: email, password: password };
+      } else {
+        payload = { username: email, password: password, name: name };
+      }
       const response = await axios.post(`${BACKEND_URL}${endpoint}`, payload, {
         headers: { "Content-Type": "application/json" },
       });

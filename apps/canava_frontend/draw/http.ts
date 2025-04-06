@@ -9,6 +9,7 @@ export async function getExistingShapes(roomId: string) {
       const messageData = JSON.parse(x.message);
       return messageData.shape;
     });
+    
     console.log(shapes);
     return shapes;
   } catch (e) {
