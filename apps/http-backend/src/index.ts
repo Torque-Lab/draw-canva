@@ -2,10 +2,18 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { middleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
-import { createUserSchema, roomSchema, SignInSchema } from "@repo/common/types";
+import {
+  createUserSchema,
+  ForgotSchema,
+  ResetSchema,
+  roomSchema,
+  SignInSchema,
+} from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 import cors from "cors";
 import bcrypt from "bcrypt";
+import { generateOTP, isOTPValid, storeOTP } from "./otp";
+import { sendOTPEmail } from "./send";
 
 const app = express();
 app.use(express.json());
@@ -14,14 +22,15 @@ app.use(cors());
 app.post("/signup", async (req, res) => {
   const parsedData = createUserSchema.safeParse(req.body);
 
+  console.log(parsedData.error);
   if (!parsedData.success) {
     return res.json({
       message: "Invalid input",
     });
     return;
   }
-const password = parsedData.data.password;
-const hashPassword = await bcrypt.hash(password, 10);
+  const password = parsedData.data.password;
+  const hashPassword = await bcrypt.hash(password, 10);
 
   //db call
   try {
@@ -42,11 +51,68 @@ const hashPassword = await bcrypt.hash(password, 10);
     });
   }
 });
+//@ts-ignore
+app.post("/forgot", async (req, res) => {
+  const parsedData = ForgotSchema.safeParse(req.body);
 
+  if (!parsedData.success) {
+    res.json({
+      message: "InValidData",
+    });
+    return;
+  }
+  const email = parsedData.data.username;
+  const user = await prismaClient.user.findFirst({
+    where: {
+      email,
+    },
+  });
+  if (!user) {
+    res.status(403).json({
+      message: "Invalid Credentials",
+    });
+    return;
+  }
 
-app.post("/forgot",(req,res)=>{
-  
-})
+  if (user) {
+    const otp = generateOTP();
+    storeOTP(email, otp);
+    sendOTPEmail(email, otp);
+  }
+
+  return res.json({
+    message:
+      "if the user is registered,you will recive an OTP with in 5 Minute",
+  });
+});
+
+//@ts-ignore
+app.post("/reset", async (req, res) => {
+  const parsedData = ResetSchema.safeParse(req.body);
+
+  if (!parsedData.success) {
+    return res.status(400).json({ message: "Invalid data" });
+  }
+  console.log(parsedData.data);
+
+  const username = parsedData.data.username;
+  const otp = parsedData.data.otp;
+  const newPassword = parsedData.data.newPassword;
+
+  if (!isOTPValid(username, otp)) {
+    return res.status(403).json({ message: "Invalid or expired OTP" });
+  }
+
+  const hashPassword = await bcrypt.hash(newPassword, 10);
+
+  await prismaClient.user.update({
+    where: { email: username },
+    data: { password: hashPassword },
+  });
+
+  return res.json({ message: "Password reset successful" });
+});
+
 //@ts-ignore
 app.post("/signin", async (req, res) => {
   const parsedData = SignInSchema.safeParse(req.body);
@@ -71,7 +137,10 @@ app.post("/signin", async (req, res) => {
   }
 
   // compare password with hashPassword
-  const isPasswordValid = await bcrypt.compare(parsedData.data.password, user.password);
+  const isPasswordValid = await bcrypt.compare(
+    parsedData.data.password,
+    user.password
+  );
 
   if (!isPasswordValid) {
     res.status(403).json({
