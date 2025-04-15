@@ -43,6 +43,10 @@ const hashPassword = await bcrypt.hash(password, 10);
   }
 });
 
+
+app.post("/forgot",(req,res)=>{
+  
+})
 //@ts-ignore
 app.post("/signin", async (req, res) => {
   const parsedData = SignInSchema.safeParse(req.body);
