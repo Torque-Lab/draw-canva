@@ -5,6 +5,8 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import { createUserSchema, roomSchema, SignInSchema } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 import cors from "cors";
+import bcrypt from "bcrypt";
+
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -18,6 +20,8 @@ app.post("/signup", async (req, res) => {
     });
     return;
   }
+const password = parsedData.data.password;
+const hashPassword = await bcrypt.hash(password, 10);
 
   //db call
   try {
@@ -25,7 +29,7 @@ app.post("/signup", async (req, res) => {
       data: {
         email: parsedData.data?.username,
         //hash password
-        password: parsedData.data?.password,
+        password: hashPassword,
         name: parsedData.data.name,
       },
     });
@@ -48,13 +52,29 @@ app.post("/signin", async (req, res) => {
     });
     return;
   }
-  // compare password with hashPassword
+  // find user by email
   const user = await prismaClient.user.findFirst({
     where: {
       email: parsedData.data.username,
-      password: parsedData.data.password,
     },
   });
+
+  if (!user) {
+    res.status(403).json({
+      message: "Invalid Credentials",
+    });
+    return;
+  }
+
+  // compare password with hashPassword
+  const isPasswordValid = await bcrypt.compare(parsedData.data.password, user.password);
+
+  if (!isPasswordValid) {
+    res.status(403).json({
+      message: "Invalid Credentials",
+    });
+    return;
+  }
   if (!user) {
     res.status(403).json({
       message: "Invalid Credentials",
